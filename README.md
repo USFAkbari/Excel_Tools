@@ -2,6 +2,8 @@
 
 A modern, modular web application for processing Excel files with **Persian and English** support, built with **Feature-Sliced Design (FSD)** architecture.
 
+![Excel Tools Demo](demo_screenshot.png)
+
 ## 🎨 Features
 
 - ✅ **File Upload & Preview** - Upload Excel files and preview data
@@ -147,11 +149,11 @@ APP_NAME=Excel Tools API
 DEBUG=false
 
 # CORS
-CORS_ORIGINS=https://shamim313.com
+CORS_ORIGINS=http://localhost:3000 # For local development and Production
 
 # File Storage
-MAX_FILE_SIZE_MB=50
-FILE_RETENTION_HOURS=24
+MAX_FILE_SIZE_MB=500
+FILE_RETENTION_HOURS=1
 ```
 
 ### Nginx Proxy Manager
@@ -160,8 +162,8 @@ The production Docker Compose file (`docker-compose.shamim.yml`) is configured t
 
 ## 📄 License
 
-MIT License - feel free to use for your projects!
+MIT License - feel free to Fork and Contributing for your projects!
 
 ## 👨‍💻 Author
 
-Built with ❤️ following Feature-Sliced Design principles
+Built with ❤️ by USFAkbari

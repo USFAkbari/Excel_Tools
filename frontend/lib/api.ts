@@ -133,9 +133,14 @@ export class ApiClient {
 
     // ============= Feature 8: Type Conversion =============
     async convertTypes(fileId: string, conversions: Array<{ column: string; target_type: string }>) {
+        const conversionMap: Record<string, string> = {};
+        conversions.forEach(c => {
+            conversionMap[c.column] = c.target_type;
+        });
+
         return this.post('/api/convert-types', {
             file_id: fileId,
-            conversions
+            conversions: conversionMap
         });
     }
 
@@ -153,8 +158,8 @@ export class ApiClient {
         return this.post('/api/split', {
             file_id: fileId,
             method,
-            split_column: splitColumn,
-            rows_per_file: rowsPerFile
+            column: splitColumn,
+            row_count: rowsPerFile
         });
     }
 

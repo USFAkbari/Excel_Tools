@@ -305,6 +305,58 @@ export default function Home() {
     }
   };
 
+  const handleConvertTypes = async (fileId: string, conversions: Array<{ column: string; target_type: string }>) => {
+    setIsProcessing(true);
+    setError('');
+    setSuccessMessage('');
+
+    try {
+      const response: any = await apiClient.convertTypes(fileId, conversions);
+      const previewData = await apiClient.previewFile(response.file_id) as PreviewResponse;
+
+      setProcessedFiles([...processedFiles, {
+        file_id: response.file_id,
+        filename: 'converted_types.xlsx',
+        preview: previewData
+      }]);
+
+      setSuccessMessage(`✅ ${response.message} - Converted ${response.columns_converted} columns`);
+    } catch (err: any) {
+      setError(err.message || 'Type conversion failed');
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const handleSplitData = async (fileId: string, method: string, splitColumn?: string, rowsPerFile?: number) => {
+    setIsProcessing(true);
+    setError('');
+    setSuccessMessage('');
+
+    try {
+      const response: any = await apiClient.splitData(fileId, method, splitColumn, rowsPerFile);
+
+      // Fetch preview for the FIRST split file only to avoid overwhelming UI
+      const firstFileId = response.file_ids[0];
+      const previewData = await apiClient.previewFile(firstFileId) as PreviewResponse;
+
+      // Add ALL split files to processed list, but only preview the first one
+      const newFiles = response.file_ids.map((id: string, index: number) => ({
+        file_id: id,
+        filename: `split_part_${index + 1}.xlsx`,
+        preview: index === 0 ? previewData : undefined // Only cache preview for first one
+      }));
+
+      setProcessedFiles([...processedFiles, ...newFiles]);
+
+      setSuccessMessage(`✅ ${response.message}`);
+    } catch (err: any) {
+      setError(err.message || 'Split data failed');
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 py-12 px-4">
       <div className="max-w-7xl mx-auto">
@@ -553,6 +605,22 @@ export default function Home() {
             isProcessing={isProcessing}
           />
 
+          {/* Feature 8: Type Conversion */}
+          <FeatureTypeConversion
+            uploadedFiles={uploadedFiles}
+            selectedFileId={selectedFileId}
+            onConvertTypes={handleConvertTypes}
+            isProcessing={isProcessing}
+          />
+
+          {/* Feature 10: Split Data */}
+          <FeatureSplitData
+            uploadedFiles={uploadedFiles}
+            selectedFileId={selectedFileId}
+            onSplitData={handleSplitData}
+            isProcessing={isProcessing}
+          />
+
         </div>
 
 
@@ -627,7 +695,7 @@ function FeatureSort({ uploadedFiles, selectedFileId, onSort, isProcessing }: an
               <select
                 value={column}
                 onChange={(e) => setColumn(e.target.value)}
-                className="w-full p-2 border border-gray-300 rounded-lg"
+                className="w-full p-2 border border-gray-300 rounded-lg text-gray-900 bg-white"
               >
                 <option value="">-- Select Column --</option>
                 {columns.map((col: string) => (
@@ -640,7 +708,7 @@ function FeatureSort({ uploadedFiles, selectedFileId, onSort, isProcessing }: an
               <select
                 value={order}
                 onChange={(e) => setOrder(e.target.value as SortOrder)}
-                className="w-full p-2 border border-gray-300 rounded-lg"
+                className="w-full p-2 border border-gray-300 rounded-lg text-gray-900 bg-white"
               >
                 <option value="asc">Ascending (A → Z, 1 → 9)</option>
                 <option value="desc">Descending (Z → A, 9 → 1)</option>
@@ -680,7 +748,7 @@ function FeatureNormalize({ uploadedFiles, selectedFileId, onNormalize, isProces
               <select
                 value={direction}
                 onChange={(e) => setDirection(e.target.value as NormalizationDirection)}
-                className="w-full p-2 border border-gray-300 rounded-lg"
+                className="w-full p-2 border border-gray-300 rounded-lg text-gray-900 bg-white"
               >
                 <option value="persian_to_english">Persian → English (۱۲۳ → 123)</option>
                 <option value="english_to_persian">English → Persian (123 → ۱۲۳)</option>
@@ -694,7 +762,7 @@ function FeatureNormalize({ uploadedFiles, selectedFileId, onNormalize, isProces
                   onChange={(e) => setApplyToAll(e.target.checked)}
                   className="w-4 h-4"
                 />
-                <span className="text-sm">Apply to all columns</span>
+                <span className="text-sm text-gray-900">Apply to all columns</span>
               </label>
             </div>
             <Button
@@ -762,7 +830,7 @@ function FeatureDeduplicateMerge({ uploadedFiles, selectedFileId, onDeduplicateM
                       onChange={() => toggleColumn(col)}
                       className="w-4 h-4"
                     />
-                    <span className="text-sm">{col}</span>
+                    <span className="text-sm text-gray-900">{col}</span>
                   </label>
                 ))}
               </div>
@@ -833,7 +901,7 @@ function FeatureFilter({ uploadedFiles, selectedFileId, onFilter, isProcessing }
             {conditions.map((condition, index) => (
               <div key={index} className="p-3 border border-gray-300 rounded-lg space-y-2">
                 <div className="flex justify-between items-center mb-2">
-                  <span className="text-sm font-medium">Condition {index + 1}</span>
+                  <span className="text-sm font-medium text-gray-900">Condition {index + 1}</span>
                   {conditions.length > 1 && (
                     <button
                       onClick={() => removeCondition(index)}
@@ -846,7 +914,7 @@ function FeatureFilter({ uploadedFiles, selectedFileId, onFilter, isProcessing }
                 <select
                   value={condition.column}
                   onChange={(e) => updateCondition(index, 'column', e.target.value)}
-                  className="w-full p-2 border border-gray-300 rounded-lg text-sm"
+                  className="w-full p-2 border border-gray-300 rounded-lg text-sm text-gray-900 bg-white"
                 >
                   <option value="">-- Select Column --</option>
                   {columns.map((col: string) => (
@@ -856,7 +924,7 @@ function FeatureFilter({ uploadedFiles, selectedFileId, onFilter, isProcessing }
                 <select
                   value={condition.operator}
                   onChange={(e) => updateCondition(index, 'operator', e.target.value)}
-                  className="w-full p-2 border border-gray-300 rounded-lg text-sm"
+                  className="w-full p-2 border border-gray-300 rounded-lg text-sm text-gray-900 bg-white"
                 >
                   <option value="equals">Equals</option>
                   <option value="not_equals">Not Equals</option>
@@ -872,7 +940,7 @@ function FeatureFilter({ uploadedFiles, selectedFileId, onFilter, isProcessing }
                   value={condition.value}
                   onChange={(e) => updateCondition(index, 'value', e.target.value)}
                   placeholder="Value"
-                  className="w-full p-2 border border-gray-300 rounded-lg text-sm"
+                  className="w-full p-2 border border-gray-300 rounded-lg text-sm text-gray-900 bg-white"
                 />
               </div>
             ))}
@@ -918,14 +986,14 @@ function FeatureColumnManagement({ uploadedFiles, selectedFileId, onRenameColumn
               <div className="space-y-2">
                 {columns.map((col: string) => (
                   <div key={col} className="flex items-center gap-2">
-                    <span className="text-sm w-1/3 truncate" title={col}>{col}</span>
+                    <span className="text-sm w-1/3 truncate text-gray-900" title={col}>{col}</span>
                     <span className="text-gray-400">→</span>
                     <input
                       type="text"
                       placeholder="New name (optional)"
                       value={renameMap[col] || ''}
                       onChange={(e) => handleRename(col, e.target.value)}
-                      className="flex-1 p-2 border border-gray-300 rounded-lg text-sm"
+                      className="flex-1 p-2 border border-gray-300 rounded-lg text-sm text-gray-900 bg-white"
                     />
                   </div>
                 ))}
@@ -974,7 +1042,7 @@ function FeatureSearchReplace({ uploadedFiles, selectedFileId, onSearchReplace, 
                 value={searchText}
                 onChange={(e) => setSearchText(e.target.value)}
                 placeholder="Text to search"
-                className="w-full p-2 border border-gray-300 rounded-lg"
+                className="w-full p-2 border border-gray-300 rounded-lg text-gray-900 bg-white"
               />
             </div>
             <div>
@@ -984,7 +1052,7 @@ function FeatureSearchReplace({ uploadedFiles, selectedFileId, onSearchReplace, 
                 value={replaceText}
                 onChange={(e) => setReplaceText(e.target.value)}
                 placeholder="Replacement text"
-                className="w-full p-2 border border-gray-300 rounded-lg"
+                className="w-full p-2 border border-gray-300 rounded-lg text-gray-900 bg-white"
               />
             </div>
             <div>
@@ -995,7 +1063,7 @@ function FeatureSearchReplace({ uploadedFiles, selectedFileId, onSearchReplace, 
                   onChange={(e) => setCaseSensitive(e.target.checked)}
                   className="w-4 h-4"
                 />
-                <span className="text-sm">Case sensitive</span>
+                <span className="text-sm text-gray-900">Case sensitive</span>
               </label>
             </div>
             <Button
@@ -1034,7 +1102,7 @@ function FeatureCalculatedColumn({ uploadedFiles, selectedFileId, onAddCalculate
                 value={newColumnName}
                 onChange={(e) => setNewColumnName(e.target.value)}
                 placeholder="e.g., Total"
-                className="w-full p-2 border border-gray-300 rounded-lg"
+                className="w-full p-2 border border-gray-300 rounded-lg text-gray-900 bg-white"
               />
             </div>
             <div>
@@ -1044,7 +1112,7 @@ function FeatureCalculatedColumn({ uploadedFiles, selectedFileId, onAddCalculate
                 onChange={(e) => setFormula(e.target.value)}
                 placeholder="e.g., Price * Quantity"
                 rows={3}
-                className="w-full p-2 border border-gray-300 rounded-lg font-mono text-sm"
+                className="w-full p-2 border border-gray-300 rounded-lg font-mono text-sm text-gray-900 bg-white"
               />
               <p className="text-xs text-gray-500 mt-1">
                 Available columns: {columns.join(', ')}
@@ -1059,6 +1127,166 @@ function FeatureCalculatedColumn({ uploadedFiles, selectedFileId, onAddCalculate
               disabled={!newColumnName || !formula}
             >
               Add Calculated Column
+            </Button>
+          </>
+        )}
+      </div>
+    </FeatureCard>
+  );
+}
+
+// Feature 8: Type Conversion
+function FeatureTypeConversion({ uploadedFiles, selectedFileId, onConvertTypes, isProcessing }: any) {
+  const [conversions, setConversions] = useState<Array<{ column: string; target_type: string }>>([]);
+  const [selectedColumn, setSelectedColumn] = useState('');
+  const [selectedType, setSelectedType] = useState('string');
+
+  const selectedFile = uploadedFiles.find((f: FileMetadata) => f.file_id === selectedFileId);
+  const columns = selectedFile?.preview?.columns || [];
+
+  const addConversion = () => {
+    if (selectedColumn && selectedType) {
+      // Remove existing conversion for this column if exists
+      const filtered = conversions.filter(c => c.column !== selectedColumn);
+      setConversions([...filtered, { column: selectedColumn, target_type: selectedType }]);
+      setSelectedColumn('');
+    }
+  };
+
+  const removeConversion = (column: string) => {
+    setConversions(conversions.filter(c => c.column !== column));
+  };
+
+  return (
+    <FeatureCard title="Type Conversion" description="Convert columns to specific data types" icon="🔄">
+      <div className="space-y-4">
+        {!selectedFileId ? (
+          <p className="text-sm text-amber-600">Please select a file from the uploaded files list above</p>
+        ) : (
+          <>
+            <div className="flex gap-2 items-end">
+              <div className="flex-1">
+                <label className="block text-sm font-medium text-gray-700 mb-1">Column:</label>
+                <select
+                  value={selectedColumn}
+                  onChange={(e) => setSelectedColumn(e.target.value)}
+                  className="w-full p-2 border border-gray-300 rounded-lg text-sm text-gray-900 bg-white"
+                >
+                  <option value="">-- Select Column --</option>
+                  {columns.map((col: string) => (
+                    <option key={col} value={col}>{col}</option>
+                  ))}
+                </select>
+              </div>
+              <div className="flex-1">
+                <label className="block text-sm font-medium text-gray-700 mb-1">Target Type:</label>
+                <select
+                  value={selectedType}
+                  onChange={(e) => setSelectedType(e.target.value)}
+                  className="w-full p-2 border border-gray-300 rounded-lg text-sm text-gray-900 bg-white"
+                >
+                  <option value="string">String (Text)</option>
+                  <option value="integer">Integer (Whole Number)</option>
+                  <option value="float">Float (Decimal)</option>
+                  <option value="boolean">Boolean (True/False)</option>
+                  <option value="datetime">DateTime</option>
+                </select>
+              </div>
+              <Button onClick={addConversion} disabled={!selectedColumn} size="sm">
+                Add
+              </Button>
+            </div>
+
+            {conversions.length > 0 && (
+              <div className="space-y-2">
+                <p className="text-sm font-medium text-gray-700">Pending Conversions:</p>
+                {conversions.map((conv) => (
+                  <div key={conv.column} className="flex items-center justify-between p-2 bg-gray-50 rounded border border-gray-200 text-sm">
+                    <span>{conv.column} → <strong>{conv.target_type}</strong></span>
+                    <button onClick={() => removeConversion(conv.column)} className="text-red-600 hover:text-red-800">✕</button>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            <Button
+              onClick={() => onConvertTypes(selectedFileId, conversions)}
+              isLoading={isProcessing}
+              disabled={conversions.length === 0}
+            >
+              Convert Types
+            </Button>
+          </>
+        )}
+      </div>
+    </FeatureCard>
+  );
+}
+
+// Feature 10: Split Data
+function FeatureSplitData({ uploadedFiles, selectedFileId, onSplitData, isProcessing }: any) {
+  const [method, setMethod] = useState('by_column');
+  const [splitColumn, setSplitColumn] = useState('');
+  const [rowCount, setRowCount] = useState<number>(100);
+
+  const selectedFile = uploadedFiles.find((f: FileMetadata) => f.file_id === selectedFileId);
+  const columns = selectedFile?.preview?.columns || [];
+
+  return (
+    <FeatureCard title="Split Data" description="Split one file into multiple files" icon="✂️">
+      <div className="space-y-4">
+        {!selectedFileId ? (
+          <p className="text-sm text-amber-600">Please select a file from the uploaded files list above</p>
+        ) : (
+          <>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Split Method:</label>
+              <select
+                value={method}
+                onChange={(e) => setMethod(e.target.value)}
+                className="w-full p-2 border border-gray-300 rounded-lg text-gray-900 bg-white"
+              >
+                <option value="by_column">By Unique Values in Column</option>
+                <option value="by_row_count">By Row Count</option>
+              </select>
+            </div>
+
+            {method === 'by_column' ? (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Select Column to Split By:</label>
+                <select
+                  value={splitColumn}
+                  onChange={(e) => setSplitColumn(e.target.value)}
+                  className="w-full p-2 border border-gray-300 rounded-lg text-gray-900 bg-white"
+                >
+                  <option value="">-- Select Column --</option>
+                  {columns.map((col: string) => (
+                    <option key={col} value={col}>{col}</option>
+                  ))}
+                </select>
+                <p className="text-xs text-gray-500 mt-1">
+                  A new file will be created for each unique value in this column.
+                </p>
+              </div>
+            ) : (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Rows per File:</label>
+                <input
+                  type="number"
+                  min="1"
+                  value={rowCount}
+                  onChange={(e) => setRowCount(parseInt(e.target.value) || 0)}
+                  className="w-full p-2 border border-gray-300 rounded-lg text-gray-900 bg-white"
+                />
+              </div>
+            )}
+
+            <Button
+              onClick={() => onSplitData(selectedFileId, method, splitColumn, rowCount)}
+              isLoading={isProcessing}
+              disabled={method === 'by_column' ? !splitColumn : rowCount <= 0}
+            >
+              Split File
             </Button>
           </>
         )}
