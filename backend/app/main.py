@@ -7,6 +7,7 @@ from app.core.config import settings
 # Import feature routers
 from app.features.file_upload.routes import router as upload_router
 from app.features.file_preview.routes import router as preview_router
+from app.features.file_download.routes import router as download_router
 from app.features.file_merge.routes import router as merge_router
 from app.features.deduplicate_merge.routes import router as deduplicate_router
 from app.features.sort_data.routes import router as sort_router
@@ -41,6 +42,7 @@ app.add_middleware(
 # Register all feature routers
 app.include_router(upload_router)
 app.include_router(preview_router)
+app.include_router(download_router)
 app.include_router(merge_router)
 app.include_router(deduplicate_router)
 app.include_router(sort_router)

@@ -3,9 +3,7 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile
-    container_name: excel_tools_backend_prod
-    expose:
-      - "8000"
+    container_name: excel_tools_backend
     volumes:
       - excel_temp_files:/app/temp_files
     environment:
@@ -25,9 +23,7 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile
-    container_name: excel_tools_frontend_prod
-    expose:
-      - "3000"
+    container_name: excel_tools_front
     environment:
       - NEXT_PUBLIC_API_URL=https://shamim313.com/api
     depends_on:

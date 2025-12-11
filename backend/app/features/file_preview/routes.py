@@ -11,8 +11,8 @@ router = APIRouter(prefix="/api", tags=["File Preview"])
 @router.get("/preview/{file_id}", response_model=PreviewResponse)
 async def preview_file(
     file_id: str,
-    max_rows: int = Query(default=50, ge=1, le=1000, description="Maximum rows to preview"),
-    file_service: FileServiceDep = None
+    file_service: FileServiceDep,
+    max_rows: int = Query(default=50, ge=1, le=1000, description="Maximum rows to preview")
 ):
     """
     Get a preview of the Excel file data.

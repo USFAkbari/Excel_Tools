@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { DataGrid } from '@/components/ui/DataGrid';
@@ -190,24 +190,24 @@ export default function Home() {
     }
   };
 
-  const handleDeduplicateMerge = async (fileIds: string[], keyColumn: string, valueColumns: string[]) => {
+  const handleDeduplicateMerge = async (fileId: string, duplicateColumns: string[]) => {
     setIsProcessing(true);
     setError('');
     setSuccessMessage('');
 
     try {
-      const response: any = await apiClient.deduplicateMerge(fileIds, keyColumn, valueColumns);
+      const response: any = await apiClient.deduplicateMerge(fileId, duplicateColumns);
       const previewData = await apiClient.previewFile(response.file_id) as PreviewResponse;
 
       setProcessedFiles([...processedFiles, {
         file_id: response.file_id,
-        filename: 'deduplicated_merged.xlsx',
+        filename: 'deduplicated.xlsx',
         preview: previewData
       }]);
 
       setSuccessMessage(`✅ ${response.message} - Duplicates removed: ${response.duplicates_removed}`);
     } catch (err: any) {
-      setError(err.message || 'Deduplicate & Merge failed');
+      setError(err.message || 'Deduplication failed');
     } finally {
       setIsProcessing(false);
     }
@@ -492,6 +492,7 @@ export default function Home() {
           {/* Feature 1: File Merge */}
           <FeatureMerge
             uploadedFiles={uploadedFiles}
+            selectedFileIds={selectedFileIds}
             onMerge={handleMergeFiles}
             isProcessing={isProcessing}
           />
@@ -515,6 +516,7 @@ export default function Home() {
           {/* Feature 2: Deduplicate & Merge */}
           <FeatureDeduplicateMerge
             uploadedFiles={uploadedFiles}
+            selectedFileId={selectedFileId}
             onDeduplicateMerge={handleDeduplicateMerge}
             isProcessing={isProcessing}
           />
@@ -575,39 +577,32 @@ export default function Home() {
 
 // ========== Feature Components ==========
 
-function FeatureMerge({ uploadedFiles, onMerge, isProcessing }: any) {
-  const [selectedIds, setSelectedIds] = useState<string[]>([]);
-
-  const toggleFile = (fileId: string) => {
-    setSelectedIds(prev =>
-      prev.includes(fileId) ? prev.filter(id => id !== fileId) : [...prev, fileId]
-    );
-  };
-
+function FeatureMerge({ uploadedFiles, selectedFileIds, onMerge, isProcessing }: any) {
   return (
     <FeatureCard title="Merge Files" description="Combine multiple Excel files into one" icon="📋">
       <div className="space-y-4">
-        <p className="text-sm text-gray-600">Select files to merge (minimum 2 files):</p>
-        <div className="space-y-2">
-          {uploadedFiles.map((file: FileMetadata) => (
-            <label key={file.file_id} className="flex items-center gap-2 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={selectedIds.includes(file.file_id)}
-                onChange={() => toggleFile(file.file_id)}
-                className="w-4 h-4"
-              />
-              <span className="text-sm">{file.filename}</span>
-            </label>
-          ))}
-        </div>
-        <Button
-          onClick={() => onMerge(selectedIds)}
-          isLoading={isProcessing}
-          disabled={selectedIds.length < 2}
-        >
-          Merge Files
-        </Button>
+        {selectedFileIds.length === 0 ? (
+          <p className="text-sm text-amber-600">Please select files from the uploaded files list above (use checkboxes)</p>
+        ) : (
+          <>
+            <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
+              <p className="text-sm font-medium text-blue-900">Selected {selectedFileIds.length} file(s) for merging:</p>
+              <ul className="text-xs text-blue-700 mt-2 space-y-1">
+                {selectedFileIds.map((id: string) => {
+                  const file = uploadedFiles.find((f: FileMetadata) => f.file_id === id);
+                  return file ? <li key={id}>• {file.filename}</li> : null;
+                })}
+              </ul>
+            </div>
+            <Button
+              onClick={() => onMerge(selectedFileIds)}
+              isLoading={isProcessing}
+              disabled={selectedFileIds.length < 2}
+            >
+              Merge {selectedFileIds.length} Files
+            </Button>
+          </>
+        )}
       </div>
     </FeatureCard>
   );
@@ -715,74 +710,56 @@ function FeatureNormalize({ uploadedFiles, selectedFileId, onNormalize, isProces
   );
 }
 
-// Feature 2: Deduplicate & Merge
-function FeatureDeduplicateMerge({ uploadedFiles, onDeduplicateMerge, isProcessing }: any) {
-  const [selectedIds, setSelectedIds] = useState<string[]>([]);
-  const [keyColumn, setKeyColumn] = useState('');
-  const [valueColumns, setValueColumns] = useState<string[]>([]);
+// Feature 2: Deduplicate & Merge (Single File Deduplication)
+function FeatureDeduplicateMerge({ uploadedFiles, selectedFileId, onDeduplicateMerge, isProcessing }: any) {
+  const [duplicateColumns, setDuplicateColumns] = useState<string[]>([]);
 
-  const toggleFile = (fileId: string) => {
-    setSelectedIds(prev =>
-      prev.includes(fileId) ? prev.filter(id => id !== fileId) : [...prev, fileId]
-    );
+  const selectedFile = uploadedFiles.find((f: FileMetadata) => f.file_id === selectedFileId);
+  const columns = selectedFile?.preview?.columns || [];
+
+  // Reset state when file changes
+  useEffect(() => {
+    setDuplicateColumns([]);
+  }, [selectedFileId]);
+
+  const toggleColumn = (column: string) => {
+    if (duplicateColumns.includes(column)) {
+      setDuplicateColumns(duplicateColumns.filter(c => c !== column));
+    } else {
+      setDuplicateColumns([...duplicateColumns, column]);
+    }
   };
 
-  const commonColumns = selectedIds.length > 0
-    ? uploadedFiles
-      .filter((f: FileMetadata) => selectedIds.includes(f.file_id))
-      .map((f: FileMetadata) => f.preview?.columns || [])
-      .reduce((acc: string[], curr: string[]) =>
-        acc.filter(col => curr.includes(col))
-      )
-    : [];
-
   return (
-    <FeatureCard title="Deduplicate & Merge" description="Merge files and remove duplicates by summing values" icon="🔄">
+    <FeatureCard
+      title="Deduplicate Data"
+      description="Remove duplicate rows and merge values within a single file"
+      icon="🔄"
+    >
       <div className="space-y-4">
-        <p className="text-sm text-gray-600">Select files to merge (minimum 2):</p>
-        <div className="space-y-2">
-          {uploadedFiles.map((file: FileMetadata) => (
-            <label key={file.file_id} className="flex items-center gap-2 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={selectedIds.includes(file.file_id)}
-                onChange={() => toggleFile(file.file_id)}
-                className="w-4 h-4"
-              />
-              <span className="text-sm">{file.filename}</span>
-            </label>
-          ))}
-        </div>
-        {selectedIds.length >= 2 && (
+        {!selectedFileId ? (
+          <p className="text-sm text-amber-600">Please select a file from the uploaded files list above</p>
+        ) : (
           <>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Key Column (unique identifier):</label>
-              <select
-                value={keyColumn}
-                onChange={(e) => setKeyColumn(e.target.value)}
-                className="w-full p-2 border border-gray-300 rounded-lg"
-              >
-                <option value="">-- Select Column --</option>
-                {commonColumns.map((col: string) => (
-                  <option key={col} value={col}>{col}</option>
-                ))}
-              </select>
+            <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg text-sm text-blue-900">
+              <p className="font-medium">How it works:</p>
+              <ul className="list-disc list-inside mt-1 text-xs">
+                <li>Select columns that identify duplicate rows</li>
+                <li>Numeric columns will be summed</li>
+                <li>Text columns will keep the first value</li>
+              </ul>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Value Columns (to sum):</label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Select columns to identify duplicates:
+              </label>
               <div className="space-y-1">
-                {commonColumns.map((col: string) => (
+                {columns.map((col: string) => (
                   <label key={col} className="flex items-center gap-2 cursor-pointer">
                     <input
                       type="checkbox"
-                      checked={valueColumns.includes(col)}
-                      onChange={(e) => {
-                        if (e.target.checked) {
-                          setValueColumns([...valueColumns, col]);
-                        } else {
-                          setValueColumns(valueColumns.filter(c => c !== col));
-                        }
-                      }}
+                      checked={duplicateColumns.includes(col)}
+                      onChange={() => toggleColumn(col)}
                       className="w-4 h-4"
                     />
                     <span className="text-sm">{col}</span>
@@ -790,15 +767,20 @@ function FeatureDeduplicateMerge({ uploadedFiles, onDeduplicateMerge, isProcessi
                 ))}
               </div>
             </div>
+            {duplicateColumns.length > 0 && (
+              <div className="p-2 bg-gray-50 border border-gray-200 rounded text-xs text-gray-700">
+                Rows with same values in: <strong>{duplicateColumns.join(', ')}</strong> will be merged
+              </div>
+            )}
+            <Button
+              onClick={() => onDeduplicateMerge(selectedFileId, duplicateColumns)}
+              isLoading={isProcessing}
+              disabled={duplicateColumns.length === 0}
+            >
+              Remove Duplicates
+            </Button>
           </>
         )}
-        <Button
-          onClick={() => onDeduplicateMerge(selectedIds, keyColumn, valueColumns)}
-          isLoading={isProcessing}
-          disabled={selectedIds.length < 2 || !keyColumn || valueColumns.length === 0}
-        >
-          Deduplicate & Merge
-        </Button>
       </div>
     </FeatureCard>
   );

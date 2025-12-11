@@ -35,6 +35,6 @@ class FilePreviewService:
             file_id=file_id,
             columns=df.columns.tolist(),
             data=data,
-            total_rows=total_rows,
-            preview_rows=len(preview_df)
+            total_rows=int(total_rows),
+            preview_rows=int(len(preview_df))
         )

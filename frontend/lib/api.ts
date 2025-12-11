@@ -19,8 +19,17 @@ export class ApiClient {
         });
 
         if (!response.ok) {
-            const error = await response.json().catch(() => ({ detail: 'Unknown error' }));
-            throw new Error(error.detail || `HTTP error! status: ${response.status}`);
+            const errorData = await response.json().catch(() => ({ detail: 'Unknown error' }));
+
+            // Handle validation errors (422) which return array of details
+            let errorMessage = errorData.detail;
+            if (Array.isArray(errorMessage)) {
+                errorMessage = errorMessage.map((e: any) => `${e.loc.join('.')}: ${e.msg}`).join(', ');
+            } else if (typeof errorMessage === 'object') {
+                errorMessage = JSON.stringify(errorMessage);
+            }
+
+            throw new Error(errorMessage || `HTTP error! status: ${response.status}`);
         }
 
         return response.json();
@@ -59,11 +68,10 @@ export class ApiClient {
     }
 
     // ============= Feature 2: Deduplicate & Merge =============
-    async deduplicateMerge(fileIds: string[], keyColumn: string, valueColumns: string[]) {
+    async deduplicateMerge(fileId: string, duplicateColumns: string[]) {
         return this.post('/api/deduplicate-merge', {
-            file_ids: fileIds,
-            key_column: keyColumn,
-            value_columns: valueColumns
+            file_id: fileId,
+            duplicate_columns: duplicateColumns
         });
     }
 
