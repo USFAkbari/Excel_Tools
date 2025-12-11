@@ -36,7 +36,7 @@ export default function Home() {
       setFileId(response.file_id);
 
       // Auto-preview after upload
-      const previewData: PreviewResponse = await apiClient.previewFile(response.file_id);
+      const previewData = await apiClient.previewFile(response.file_id) as PreviewResponse;
       setPreview(previewData);
     } catch (err: any) {
       setError(err.message || 'Upload failed');
