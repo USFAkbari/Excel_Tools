@@ -1,0 +1,38 @@
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: excel_tools_backend
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend/temp_files:/app/temp_files
+      - ./backend/app:/app/app # Hot reload for development
+    environment:
+      - DEBUG=true
+      - CORS_ORIGINS=["http://localhost:3000","http://localhost:8000"]
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: excel_tools_frontend
+    ports:
+      - "3000:3000"
+    environment:
+      - NEXT_PUBLIC_API_URL=http://localhost:8000
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    depends_on:
+      - backend
+    restart: unless-stopped
