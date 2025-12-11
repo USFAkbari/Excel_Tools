@@ -20,21 +20,17 @@ class FilePreviewService:
         Returns:
             PreviewResponse with column names and data
         """
-        # Load DataFrame
-        df = self.file_service.load_excel(file_id)
-        
-        # Get preview data
-        preview_df = df.head(max_rows)
-        total_rows = len(df)
+        # Get preview data and total rows efficiently
+        df, total_rows = self.file_service.get_excel_preview(file_id, max_rows)
         
         # Convert to list of dictionaries
         # Handle NaN values by converting to None
-        data = preview_df.fillna("").to_dict(orient="records")
+        data = df.fillna("").to_dict(orient="records")
         
         return PreviewResponse(
             file_id=file_id,
             columns=df.columns.tolist(),
             data=data,
-            total_rows=int(total_rows),
-            preview_rows=int(len(preview_df))
+            total_rows=total_rows,
+            preview_rows=int(len(df))
         )

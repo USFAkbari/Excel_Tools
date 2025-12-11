@@ -102,7 +102,44 @@ class FileService:
                 detail=f"Failed to load Excel file: {str(e)}"
             )
     
+    
+    def get_excel_preview(self, file_id: str, max_rows: int = 50) -> tuple[pd.DataFrame, int]:
+        """
+        Get preview DataFrame and total row count efficiently.
+        
+        Args:
+            file_id: The unique file identifier
+            max_rows: Maximum rows to read
+            
+        Returns:
+            Tuple of (preview_df, total_rows)
+        """
+        file_path = self.get_file_path(file_id)
+        
+        try:
+            # 1. Get total rows efficiently using openpyxl read-only mode
+            import openpyxl
+            wb = openpyxl.load_workbook(file_path, read_only=True, data_only=True)
+            ws = wb.active
+            # max_row in read_only might be None if not valid metadata, but usually fine for saved files
+            total_rows = ws.max_row if ws.max_row is not None else 0
+            # Adjust for header row (assuming 1 header row)
+            total_rows = max(0, total_rows - 1)
+            wb.close()
+            
+            # 2. Read only preview rows using pandas
+            df = pd.read_excel(file_path, engine='openpyxl', nrows=max_rows)
+            
+            return df, total_rows
+            
+        except Exception as e:
+            raise HTTPException(
+                status_code=500,
+                detail=f"Failed to load Excel preview: {str(e)}"
+            )
+
     def save_dataframe(self, df: pd.DataFrame, original_file_id: str | None = None) -> str:
+
         """
         Save a pandas DataFrame to a new Excel file and return new file_id.
         
