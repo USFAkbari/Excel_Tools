@@ -23,7 +23,7 @@ class Settings(BaseSettings):
     file_retention_hours: int = 24
     
     class Config:
-        env_file = ".env"
+        env_file = [".env", "../.env"]
         case_sensitive = False
 
 
