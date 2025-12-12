@@ -1,5 +1,6 @@
 """Application configuration using Pydantic Settings."""
 from pydantic_settings import BaseSettings
+from pydantic import field_validator
 from pathlib import Path
 
 
@@ -12,7 +13,15 @@ class Settings(BaseSettings):
     debug: bool = False
     
     # CORS
-    cors_origins: list[str] = ["http://localhost:3000", "http://localhost:8000"]
+    # Must allow str to handle comma-separated strings from .env without JSON parsing error
+    cors_origins: list[str] | str = ["http://localhost:3000", "http://localhost:8000"]
+    
+    @field_validator("cors_origins", mode="before")
+    @classmethod
+    def parse_cors_origins(cls, v: str | list[str]) -> list[str] | str:
+        if isinstance(v, str) and not v.strip().startswith("["):
+            return [i.strip() for i in v.split(",")]
+        return v
     
     # File Storage
     temp_files_dir: Path = Path(__file__).parent.parent.parent / "temp_files"
