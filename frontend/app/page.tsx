@@ -627,7 +627,7 @@ export default function Home() {
         {/* API Documentation Link */}
         <div className="mt-12 text-center">
           <a
-            href={`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/docs`}
+            href={process.env.NEXT_PUBLIC_DOCS_URL || `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/docs`}
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center gap-2 text-primary hover:text-primary-hover font-medium"

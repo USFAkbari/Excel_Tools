@@ -23,10 +23,11 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile
+      args:
+        - NEXT_PUBLIC_API_URL=https://tools.shamim313.com
     container_name: excel_tools_front
     environment:
-      - NEXT_PUBLIC_API_URL=https://shamim313.com/api
-      - BACKEND_URL=https://shamim313.com/api
+      - NEXT_PUBLIC_API_URL=https://tools.shamim313.com
     depends_on:
       - backend
     restart: always
