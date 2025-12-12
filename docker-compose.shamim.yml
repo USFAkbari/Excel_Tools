@@ -4,12 +4,13 @@ services:
       context: ./backend
       dockerfile: Dockerfile
     container_name: excel_tools_backend
+    env_file: .env
     volumes:
       - excel_temp_files:/app/temp_files
     environment:
       - DEBUG=false
       - CORS_ORIGINS=["https://shamim313.com","https://www.shamim313.com"]
-    restart: always
+    restart: unless-stopped
     logging:
       driver: "json-file"
       options:
@@ -23,14 +24,13 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile
-      args:
-        - NEXT_PUBLIC_API_URL=https://tools.shamim313.com
     container_name: excel_tools_front
+    env_file: .env
     environment:
       - NEXT_PUBLIC_API_URL=https://tools.shamim313.com
     depends_on:
       - backend
-    restart: always
+    restart: unless-stopped
     logging:
       driver: "json-file"
       options:
