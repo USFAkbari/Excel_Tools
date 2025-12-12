@@ -26,6 +26,7 @@ services:
     container_name: excel_tools_front
     environment:
       - NEXT_PUBLIC_API_URL=https://shamim313.com/api
+      - BACKEND_URL=https://shamim313.com/api
     depends_on:
       - backend
     restart: always
