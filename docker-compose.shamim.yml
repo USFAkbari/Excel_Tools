@@ -7,9 +7,6 @@ services:
     env_file: .env
     volumes:
       - excel_temp_files:/app/temp_files
-    environment:
-      - DEBUG=false
-      - CORS_ORIGINS=["https://shamim313.com","https://www.shamim313.com"]
     restart: unless-stopped
     logging:
       driver: "json-file"
@@ -26,8 +23,6 @@ services:
       dockerfile: Dockerfile
     container_name: excel_tools_front
     env_file: .env
-    environment:
-      - NEXT_PUBLIC_API_URL=https://tools.shamim313.com
     depends_on:
       - backend
     restart: unless-stopped
@@ -36,11 +31,6 @@ services:
       options:
         max-size: "10m"
         max-file: "3"
-    labels:
-      # Nginx Proxy Manager labels
-      - "com.nginx-proxy-manager.enabled=true"
-      - "com.nginx-proxy-manager.host=shamim313.com"
-      - "com.nginx-proxy-manager.port=3000"
     networks:
       - excel_network
       - shamim_network
