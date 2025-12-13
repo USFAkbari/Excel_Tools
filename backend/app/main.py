@@ -25,8 +25,9 @@ app = FastAPI(
     title=settings.app_name,
     version=settings.app_version,
     description="A modular Excel processing API built with Feature-Sliced Design",
-    docs_url="/docs",
-    redoc_url="/redoc"
+    openapi_url= f"/api/v1/openapi.json",
+    docs_url= f"/api/v1/docs",
+    redoc_url= f"/api/v1/redoc"
 )
 
 # Configure CORS

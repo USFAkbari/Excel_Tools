@@ -1,3 +1,5 @@
+[فارسی](README.fa.md)
+
 # Excel Tools
 
 A modern, modular web application for processing Excel files with **Persian and English** support, built with **Feature-Sliced Design (FSD)** architecture.
@@ -28,19 +30,43 @@ Built following **Feature-Sliced Design** principles:
 
 ## 🚀 Quick Start
 
+### Prerequisites
+
+- **Python**: 3.12 or higher
+- **Node.js**: 18.17 or later
+- **Docker**: Optional, for containerized deployment
+
 ### Local Development
 
-1. **Backend**:
+1. **Backend Setup**:
 ```bash
 cd backend
-pip install -r requirements.txt
-uvicorn app.main:app --reload
-```
 
-2. **Frontend**:
+# Create virtual environment
+python -m venv venv
+
+# Activate virtual environment
+# On Linux/macOS:
+source venv/bin/activate
+# On Windows:
+# .\venv\Scripts\activate
+
+# Install dependencies
+pip install -r requirements.txt
+
+# Start the server
+uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+```
+The API will be available at http://localhost:8000 (Docs: /docs).
+
+2. **Frontend Setup**:
 ```bash
 cd frontend
+
+# Install dependencies
 npm install
+
+# Start development server
 npm run dev
 ```
 

@@ -1,0 +1,81 @@
+{
+  "HomePage": {
+    "title": "Excel Tools",
+    "subtitle": "Professional Excel file processing with Persian & English support",
+    "uploadFiles": "Upload Excel Files",
+    "uploadDesc": "Upload one or more .xlsx or .xls files to get started",
+    "uploadButton": "Upload",
+    "uploadedFiles": "Uploaded Files",
+    "selectAll": "Select All",
+    "select": "Select",
+    "selected": "Selected",
+    "rows": "rows",
+    "columns": "columns",
+    "features": "Excel Processing Features",
+    "viewApiDocs": "View API Documentation"
+  },
+  "Features": {
+     "Merge": {
+        "title": "Merge Files",
+        "description": "Combine multiple Excel files into one",
+        "mergeButton": "Merge Files",
+        "selectFiles": "Selected {count} file(s) for merging:"
+    },
+     "Deduplicate": {
+        "title": "Deduplicate & Merge",
+        "description": "Remove duplicates and sum numeric columns",
+        "button": "Deduplicate"
+    },
+     "Sort": {
+        "title": "Sort Data",
+        "description": "Sort data by a specific column",
+        "columnLabel": "Column to sort by:",
+        "orderLabel": "Sort order:",
+        "asc": "Ascending (A → Z, 1 → 9)",
+        "desc": "Descending (Z → A, 9 → 1)",
+        "button": "Sort Data"
+    },
+     "Normalize": {
+        "title": "Number Normalization",
+        "description": "Convert between Persian and English digits",
+        "directionLabel": "Direction:",
+        "persianToEnglish": "Persian → English (۱۲۳ → 123)",
+        "englishToPersian": "English → Persian (123 → ۱۲۳)",
+        "applyToAll": "Apply to all columns",
+        "button": "Normalize Numbers"
+    },
+    "Filter": {
+        "title": "Data Filtering",
+        "description": "Filter rows based on conditions"
+    },
+    "ColumnMgmt": {
+        "title": "Column Management",
+        "description": "Rename, delete, and reorder columns"
+    },
+    "SearchReplace": {
+        "title": "Search & Replace",
+        "description": "Find and replace text in columns"
+    },
+    "Calculated": {
+        "title": "Calculated Columns",
+        "description": "Create new columns from formulas"
+    },
+    "TypeConversion": {
+        "title": "Type Conversion",
+        "description": "Convert column data types"
+    },
+    "Split": {
+        "title": "Split Data",
+        "description": "Split files by unique values or row count"
+    }
+
+  },
+  "Common": {
+      "selectFile": "Please select a file from the uploaded files list above",
+      "selectFilesMerge": "Please select files from the uploaded files list above (use checkboxes)",
+      "selectColumn": "-- Select Column --",
+      "remove": "Remove",
+      "download": "Download",
+      "preview": "Preview"
+  }
+}
