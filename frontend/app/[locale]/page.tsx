@@ -365,7 +365,7 @@ export default function Home() {
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 py-12 px-4">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
-        <div className="text-center mb-12 relative">
+        <div className="mb-12 relative">
           <div className="absolute top-0 right-0">
             <LanguageSwitcher />
           </div>
@@ -634,7 +634,7 @@ export default function Home() {
         {/* API Documentation Link */}
         <div className="mt-12 text-center">
           <a
-            href={`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/docs`}
+            href={`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/api/v1/docs`}
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center gap-2 text-primary hover:text-primary-hover font-medium"
