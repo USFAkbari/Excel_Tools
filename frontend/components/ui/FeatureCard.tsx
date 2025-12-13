@@ -22,7 +22,7 @@ export function FeatureCard({ title, description, icon, children, isExpanded = f
             >
                 <div className="flex items-center gap-4">
                     <div className="text-3xl">{icon}</div>
-                    <div className="text-left">
+                    <div>
                         <h3 className="text-lg font-semibold text-gray-900">{title}</h3>
                         <p className="text-sm text-gray-600">{description}</p>
                     </div>
