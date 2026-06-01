@@ -32,7 +32,7 @@ Built following **Feature-Sliced Design** principles:
 
 ### Prerequisites
 
-- **Python**: 3.12 or higher
+- **python**: 3.12 or higher
 - **Node.js**: 18.17 or later
 - **Docker**: Optional, for containerized deployment
 
